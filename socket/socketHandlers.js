@@ -76,7 +76,6 @@ module.exports = (io) => {
 
         // === Исправляем проблему с _id ===
         let blockToSave = { ...block };
-        // Если _id невалидный или отсутствует, создаём новый ObjectId
         if (!blockToSave._id || !mongoose.isValidObjectId(blockToSave._id)) {
           blockToSave._id = new mongoose.Types.ObjectId();
         }
@@ -91,7 +90,8 @@ module.exports = (io) => {
           slide.blocks.push(blockToSave);
         }
         await slide.save();
-        socket.to(slide.presentationId.toString()).emit('block-updated', { slideId, block: blockToSave });
+        // -- ИСПРАВЛЕНИЕ: отправляем ВСЕМ, включая инициатора
+        io.to(slide.presentationId.toString()).emit('block-updated', { slideId, block: blockToSave });
       } catch (err) {
         console.error('update-block error:', err);
       }
